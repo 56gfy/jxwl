@@ -65,7 +65,6 @@ body{background:#060910;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFo
 <div class="bottom-bar">
   <button class="btn btn-blue" onclick="showAdd()">＋新增</button>
   <button class="btn btn-purple" onclick="showShare()">上架</button>
-  <button class="btn btn-teal" onclick="showImport()">导入选号</button>
   <button class="btn btn-dark" onclick="showHistory()">记录</button>
   <button class="btn btn-dark" onclick="doExport()">导出</button>
   <button class="btn btn-dark" onclick="doImport()">导入</button>
@@ -157,10 +156,6 @@ async function doShare(){
   let k=await enc(sel.map(a=>({code:a.code,name:a.name,region:a.region,price:a.price,highlight:a.highlight,game:a.game||'',status:rs(a)})));
   try{navigator.clipboard.writeText('https://56gfy.github.io/jxwl/?k='+k);alert('链接已复制！共'+sel.length+'个号')}catch(e){prompt('复制链接：','https://56gfy.github.io/jxwl/?k='+k)}
   document.getElementById('shareModal')?.remove()
-}
-async function showImport(){
-  let k=prompt('粘贴客户选号密钥：');if(!k)return;
-  try{let s=await dec(k);alert('选了'+s.length+'个号：\n'+s.map(x=>'• '+x.code+' — '+x.days+'天').join('\n'))}catch(e){alert('无效：'+e.message)}
 }
 function addHist(a){if(!a.rs)return;history.unshift({code:a.code,name:a.name,rv:a.rv,ru:a.ru,rs:a.rs,re:nowISO()});saveHist()}
 function showHistory(){
