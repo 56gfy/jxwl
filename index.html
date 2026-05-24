@@ -85,7 +85,7 @@ function b64ToBytes(b64){b64=b64.replace(/-/g,'+').replace(/_/g,'/');while(b64.l
 
 async function decompress(c){const d=new DecompressionStream('gzip'),w=d.writable.getWriter();w.write(c);w.close();const b=await new Response(d.readable).arrayBuffer();return new TextDecoder().decode(b)}
 
-function fromURL(){const p=new URLSearchParams(location.search);return p.get('k')||''}
+function fromURL(){const p=new URLSearchParams(location.search);let k=p.get('k')||'';if(location.hash&&location.hash.startsWith('#'))k+=location.hash;return k}
 
 async function loadKey(key){
   if(!key.startsWith('JX1:'))throw new Error('密钥格式错误');
