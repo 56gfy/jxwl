@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>今心网络 · 管理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060910;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;-webkit-tap-highlight-color:transparent}
+.topbar{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#0b1220ee,#0b1220aa);backdrop-filter:blur(20px);padding:10px 14px;border-bottom:0.5px solid #1e293b;display:flex;align-items:center;gap:8px}
+.logo{background:linear-gradient(135deg,#3b82f6,#8b5cf6,#ec4899);background-size:200% 200%;animation:logoShine 3s ease infinite;color:#fff;font-size:10px;font-weight:900;padding:3px 10px;border-radius:8px;letter-spacing:1px;box-shadow:0 0 16px #7c3aed44;flex-shrink:0}
+@keyframes logoShine{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.title{font-size:16px;font-weight:900;color:#f1f5f9}
+.container{max-width:720px;margin:0 auto;padding:8px 12px 80px}
+.stats{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
+.stats::-webkit-scrollbar{display:none}
+.stat{padding:10px 12px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #1e293b;background:#0f172a;color:#94a3b8;text-align:center;flex:1;min-width:60px;transition:all .15s}
+.stat b{display:block;font-size:20px;margin-top:2px}
+.stat.active{background:#1d4ed8;color:#fff;border-color:#3b82f6}
+.toolbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.toolbar input{flex:1;min-width:120px;background:#0b1220;color:#e2e8f0;border:1px solid #243247;border-radius:16px;padding:10px 14px;font-size:13px;outline:none}
+.toolbar input:focus{border-color:#3b82f6}
+.btn{padding:8px 16px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;border:none;white-space:nowrap}
+.btn-blue{background:#2563eb;color:#fff}.btn-purple{background:#7c3aed;color:#fff}.btn-teal{background:#0f766e;color:#fff}.btn-dark{background:#172033;color:#e2e8f0;border:1px solid #334155}.btn-red{background:#991b1b;color:#fecaca}
+.card{background:linear-gradient(145deg,#0f172a,#111a31);border:1px solid #1a2438;border-radius:20px;overflow:hidden;margin-bottom:10px;transition:all .15s}
+.card:active{transform:scale(.98);border-color:#3b82f6}
+.card .img-box{height:140px;background:#0a101f;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card .img-box img{width:100%;height:100%;object-fit:cover}
+.card .img-box .gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,23,42,0) 45%,#0f172a),linear-gradient(90deg,rgba(15,23,42,0.3) 0%,transparent 15%,transparent 85%,rgba(15,23,42,0.3) 100%);pointer-events:none}
+.card .img-box .emoji{font-size:44px;position:relative;z-index:1}
+.card .img-box .game-tag{position:absolute;top:8px;left:8px;background:#00000055;backdrop-filter:blur(8px);color:#cbd5e1;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;z-index:2}
+.card .body{padding:12px 14px 14px}
+.card .row1{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.card .name{font-size:14px;font-weight:800;color:#f1f5f9;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .status{padding:3px 10px;border-radius:16px;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.st-idle{background:#166534;color:#86efac}.st-rented{background:#78350f;color:#fde68a}.st-expired{background:#991b1b;color:#fecaca}.st-disabled{background:#374151;color:#9ca3af}
+.card .row2{display:flex;gap:4px;font-size:11px;color:#64748b;margin-bottom:4px}
+.card .price-row{display:flex;align-items:baseline;gap:4px;margin-bottom:5px;padding:8px 12px;background:#0b1220;border-radius:12px}
+.card .price{font-size:18px;font-weight:900;color:#60a5fa}
+.card .unit{font-size:11px;color:#475569}
+.card .countdown{font-size:11px;color:#e2e8f0;font-weight:700;padding:6px 10px;background:#0b1220;border-radius:10px;margin-bottom:6px}
+.card .highlight{font-size:10px;color:#475569;line-height:1.4;margin-bottom:8px}
+.card .actions{display:flex;gap:4px;flex-wrap:wrap}
+.card .actions .btn{flex:1;min-width:52px;text-align:center}
+.modal-overlay{position:fixed;inset:0;background:#000000aa;z-index:100;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:#0f172a;border:1px solid #1e293b;border-radius:24px 24px 0 0;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;padding:20px 18px 30px}
+.modal h3{font-size:17px;font-weight:900;margin-bottom:14px;color:#f1f5f9}
+.modal label{display:block;font-size:12px;color:#94a3b8;margin-bottom:3px;margin-top:10px}
+.modal input,.modal textarea,.modal select{width:100%;background:#0b1220;color:#e2e8f0;border:1px solid #243247;border-radius:12px;padding:10px 12px;font-size:13px;outline:none;margin-bottom:4px;font-family:inherit}
+.modal textarea{height:56px;resize:vertical}
+.modal select{appearance:none}
+.modal .btn-row{display:flex;gap:8px;margin-top:16px}
+.modal .btn-row .btn{flex:1;padding:12px;font-size:14px;border-radius:16px}
+.history-table{width:100%;font-size:11px;border-collapse:collapse}
+.history-table th{color:#64748b;text-align:left;padding:6px 8px;border-bottom:1px solid #1e293b}
+.history-table td{padding:8px;border-bottom:1px solid #0f172a}
+.empty-state{text-align:center;padding:60px 20px;color:#475569}
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#0b1220ee;backdrop-filter:blur(16px);border-top:0.5px solid #1e293b;padding:8px 12px;display:flex;gap:6px;z-index:40}
+.bottom-bar .btn{flex:1;padding:10px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="topbar"><span class="logo">今心网络</span><span class="title">管理后台</span></div>
+<div class="container" id="app"></div>
+<div class="bottom-bar">
+  <button class="btn btn-blue" onclick="showAdd()">＋新增</button>
+  <button class="btn btn-purple" onclick="showShare()">上架</button>
+  <button class="btn btn-teal" onclick="showImport()">导入选号</button>
+  <button class="btn btn-dark" onclick="showHistory()">记录</button>
+  <button class="btn btn-dark" onclick="doExport()">导出</button>
+  <button class="btn btn-dark" onclick="doImport()">导入</button>
+</div>
+<script>
+const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',和平精英:'heji.png',吃鸡:'heji.png',王者荣耀:'wzry.png',原神:'ys.png',魔兽世界:'mssj.png',逆战:'nz.png',梦幻西游:'mhxy.png',传奇:'cq.png'};
+const STY={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'st-disabled'};
+const GAMES=['','LOL','CF','DNF','永劫无间','和平精英','王者荣耀','原神','魔兽世界','逆战','梦幻西游','传奇'];
+let accounts=[],filter='全部',search='',nextId=1,history=[];
+
+function save(){localStorage.setItem('jx_acc',JSON.stringify(accounts));localStorage.setItem('jx_nid',nextId)}
+function load(){try{let a=localStorage.getItem('jx_acc');if(a){accounts=JSON.parse(a);accounts.forEach(x=>{if(x.id>=nextId)nextId=x.id+1})}}catch(e){}nextId=parseInt(localStorage.getItem('jx_nid')||'1')}
+function saveHist(){localStorage.setItem('jx_hist',JSON.stringify(history.slice(0,200)))}
+function loadHist(){try{let h=localStorage.getItem('jx_hist');if(h)history=JSON.parse(h)}catch(e){}}
+function nowISO(){return new Date().toISOString().slice(0,16)}
+function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&new Date(a.re)<=new Date())return'已到期';return a.status}
+function rem(a){let s=rs(a);if(s==='空闲')return'现在可租';if(s==='停用')return'已停用';if(s==='已到期')return'已到期';if(!a.re)return'';let d=new Date(a.re)-new Date();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000),mm=Math.floor(d%3600000/60000);return'还剩 '+dd+'天 '+hh+'小时 '+mm+'分'}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+// Key codec
+async function gz(s){let c=new CompressionStream('gzip'),w=c.writable.getWriter();w.write(new TextEncoder().encode(s));w.close();return new Uint8Array(await new Response(c.readable).arrayBuffer())}
+async function ugz(d){let s=new DecompressionStream('gzip'),w=s.writable.getWriter();w.write(d);w.close();return new TextDecoder().decode(await new Response(s.readable).arrayBuffer())}
+function b64e(u){let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
+async function sha(s){let h=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)));return Array.from(h).map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function enc(list){let b=b64e(await gz(JSON.stringify(list)));return'JX1:'+b+'!'+(await sha(b)).slice(0,8)}
+async function dec(k){k=k.trim();if(!k.startsWith('JX1:'))throw Error('格式错误');let p=k.slice(4),i=p.lastIndexOf('!');if(i===-1)throw Error('缺少校验码');let b=p.slice(0,i),c=p.slice(i+1);if((await sha(b)).slice(0,8)!==c)throw Error('校验失败');return JSON.parse(await ugz(b64d(b)))}
+
+function renderStats(){
+  let t=0,il=0,rt=0,ex=0;accounts.forEach(a=>{t++;let s=rs(a);if(s==='空闲')il++;if(s==='已出租')rt++;if(s==='已到期')ex++});
+  return'<div class="stats">'+['全部','空闲','已出租','已到期'].map(s=>'<div class="stat'+(filter===s?' active':'')+'" onclick="filter=\''+s+'\';render()">'+s+'<b>'+{全部:t,空闲:il,已出租:rt,已到期:ex}[s]+'</b></div>').join('')+'</div>';
+}
+function card(a){
+  let s=rs(a),g=a.game||'',im=GAME_IMG[g],ac=[];
+  let ib='<div class="img-box">';
+  if(im)ib+='<img src="'+im+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="emoji" style="display:none">🎮</span>';
+  else ib+='<span class="emoji">🎮</span>';
+  ib+='<div class="gradient"></div>'+(g?'<span class="game-tag">'+esc(g)+'</span>':'')+'</div>';
+  if(s==='空闲')ac.push('<button class="btn btn-teal" onclick="doRent('+a.id+')">出租</button>');
+  if(s==='已出租'||s==='已到期')ac.push('<button class="btn btn-dark" onclick="doIdle('+a.id+')">归还</button>');
+  ac.push('<button class="btn btn-dark" onclick="editAc('+a.id+')">编辑</button>');
+  if(s!=='停用')ac.push('<button class="btn btn-dark" onclick="doOff('+a.id+')">停用</button>');
+  ac.push('<button class="btn btn-red" onclick="doDel('+a.id+')">删</button>');
+  return'<div class="card">'+ib+'<div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+STY[s]+'">'+s+'</span></div><div class="row2"><span>'+esc(a.code)+'</span><span>·</span><span>'+esc(a.region)+'</span></div><div class="price-row"><span>¥</span><span class="price">'+(a.price||0).toFixed(0)+'</span><span class="unit">/ 天</span></div>'+(s==='已出租'?'<div class="countdown">'+rem(a)+'</div>':'')+'<div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div><div class="actions">'+ac.join('')+'</div></div></div>';
+}
+function render(){
+  let l=accounts;if(filter!=='全部')l=l.filter(a=>rs(a)===filter);
+  if(search)l=l.filter(a=>(a.name+a.code+a.region).toLowerCase().includes(search.toLowerCase()));
+  document.getElementById('app').innerHTML=renderStats()+'<div class="toolbar"><input placeholder="搜索" value="'+esc(search)+'" oninput="search=this.value;render()"></div>'+(l.length?l.map(card).join(''):'<div class="empty-state"><div style="font-size:48px;margin-bottom:12px">📭</div><p>暂无账号</p></div>');
+}
+function doDel(id){if(confirm('删除？')){accounts=accounts.filter(a=>a.id!==id);save();render()}}
+function doOff(id){let a=accounts.find(a=>a.id===id);if(a){a.status='停用';save();render()}}
+function doIdle(id){let a=accounts.find(a=>a.id===id);if(a){addHist(a);a.status='空闲';a.rv=null;a.ru=null;a.rs=null;a.re=null;save();render()}}
+function doRent(id){let a=accounts.find(a=>a.id===id);if(!a)return;let s=prompt('租几天？','1');let d=parseInt(s);if(!d||d<1)return;a.status='已出租';a.rv=d;a.ru='天';a.rs=nowISO();a.re=new Date(Date.now()+d*86400000).toISOString().slice(0,16);save();render()}
+function showModal(ac){
+  let ed=!!ac,h='<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3>'+(ed?'编辑':'新增')+'账号</h3>';
+  let f=(l,n,v,t='input')=>'<label>'+l+'</label><'+t+' id="f_'+n+'">'+esc(v||'')+'</'+(t==='input'?'input>':t+'>');
+  h+=f('编号','code',ac?.code);h+=f('名称','name',ac?.name);h+=f('区服','region',ac?.region);
+  h+=f('信息','text',ac?.text,'textarea');h+=f('价格','price',ac?.price);
+  h+=f('亮点','hl',ac?.highlight,'textarea');
+  h+='<label>游戏</label><select id="f_game">'+GAMES.map(g=>'<option'+(ac?.game===g?' selected':'')+'>'+g+'</option>').join('')+'</select>';
+  h+='<label>状态</label><select id="f_status"><option value="空闲"'+(ac?.status!=='停用'?' selected':'')+'>空闲</option><option value="停用"'+(ac?.status==='停用'?' selected':'')+'>停用</option></select>';
+  h+='<div class="btn-row"><button class="btn btn-dark" onclick="this.closest(\'.modal-overlay\').remove()">取消</button><button class="btn btn-blue" onclick="saveAc('+(ed?ac.id:'null')+')">保存</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+}
+function showAdd(){showModal(null)}
+function editAc(id){showModal(accounts.find(a=>a.id===id))}
+function saveAc(id){
+  let g=n=>document.getElementById('f_'+n).value.trim();
+  let a={code:g('code'),name:g('name'),region:g('region'),text:g('text'),price:parseFloat(g('price'))||0,highlight:g('hl'),game:document.getElementById('f_game').value,status:document.getElementById('f_status').value};
+  if(!a.code||!a.name||!a.region){alert('编号/名称/区服必填');return}
+  if(id){let o=accounts.find(x=>x.id===id);Object.assign(o,a)}else{a.id=accounts.length?Math.max(...accounts.map(x=>x.id))+1:1;a.rv=null;a.ru=null;a.rs=null;a.re=null;accounts.unshift(a)}
+  save();render();document.querySelector('.modal-overlay')?.remove()
+}
+async function showShare(){
+  let av=accounts.filter(a=>{let s=rs(a);return s==='空闲'||s==='已出租'});
+  if(!av.length){alert('没有可上架的号');return}
+  let sel=av.filter(a=>confirm('上架「'+a.name+'」？\n确定=上架  取消=跳过'));
+  if(!sel.length)return;
+  let k=await enc(sel.map(a=>({code:a.code,name:a.name,region:a.region,price:a.price,highlight:a.highlight,game:a.game||'',status:rs(a)})));
+  try{navigator.clipboard.writeText('https://56gfy.github.io/jxwl/?k='+k);alert('链接已复制！共'+sel.length+'个号')}catch(e){prompt('复制链接：','https://56gfy.github.io/jxwl/?k='+k)}
+}
+async function showImport(){
+  let k=prompt('粘贴客户选号密钥：');if(!k)return;
+  try{let s=await dec(k);alert('选了'+s.length+'个号：\n'+s.map(x=>'• '+x.code+' — '+x.days+'天').join('\n'))}catch(e){alert('无效：'+e.message)}
+}
+function addHist(a){if(!a.rs)return;history.unshift({code:a.code,name:a.name,rv:a.rv,ru:a.ru,rs:a.rs,re:nowISO()});saveHist()}
+function showHistory(){
+  let h='<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3>出租记录</h3>';
+  if(!history.length)h+='<p style="color:#64748b">暂无</p>';
+  else h+='<table class="history-table"><tr><th>账号</th><th>时长</th><th>出租</th><th>归还</th></tr>'+history.slice(0,50).map(r=>'<tr><td>'+esc(r.name)+'</td><td>'+(r.rv||'')+(r.ru||'')+'</td><td>'+r.rs+'</td><td>'+r.re+'</td></tr>').join('')+'</table>';
+  h+='<div class="btn-row"><button class="btn btn-dark" onclick="if(confirm(\'清空？\')){history=[];saveHist();this.closest(\'.modal-overlay\').remove()}">清空</button><button class="btn btn-blue" onclick="this.closest(\'.modal-overlay\').remove()">关闭</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h)
+}
+function doExport(){let d=JSON.stringify({accounts,nextId,history:history.slice(0,200)});try{navigator.clipboard.writeText(d);alert('数据已复制！'+accounts.length+'个号\n发到另一台手机点导入')}catch(e){prompt('复制数据：',d)}}
+function doImport(){let j=prompt('粘贴数据：');if(!j)return;try{let d=JSON.parse(j);if(d.accounts){accounts=d.accounts;nextId=d.nextId||1};if(d.history)history=d.history;save();saveHist();render();alert('导入成功！'+accounts.length+'个号')}catch(e){alert('格式错误')}}
+load();loadHist();render();setInterval(render,60000);
+</script>
+</body>
+</html>
