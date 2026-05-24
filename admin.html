@@ -143,10 +143,20 @@ function saveAc(id){
 async function showShare(){
   let av=accounts.filter(a=>{let s=rs(a);return s==='空闲'||s==='已出租'});
   if(!av.length){alert('没有可上架的号');return}
-  let sel=av.filter(a=>confirm('上架「'+a.name+'」？\n确定=上架  取消=跳过'));
-  if(!sel.length)return;
+  let h='<div class="modal-overlay" id="shareModal" onclick="if(event.target===this)this.remove()"><div class="modal"><h3>上架账号</h3>';
+  h+='<div style="margin-bottom:10px;display:flex;gap:6px"><button class="btn btn-blue" onclick="document.querySelectorAll(\'.share-cb\').forEach(c=>c.checked=true)">全选</button><button class="btn btn-dark" onclick="document.querySelectorAll(\'.share-cb\').forEach(c=>c.checked=false)">取消</button></div>';
+  av.forEach(a=>{let s=rs(a);h+='<label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer"><input type="checkbox" class="share-cb" value="'+a.id+'" '+(s==='空闲'?'checked':'')+'><span style="flex:1;font-size:13px">'+esc(a.name)+' <span style="color:#64748b">'+esc(a.code)+' ¥'+(a.price||0).toFixed(0)+'/天</span></span><span class="status '+STY[s]+'" style="font-size:10px;padding:2px 8px">'+s+'</span></label>'});
+  h+='<div class="btn-row"><button class="btn btn-dark" onclick="document.getElementById(\'shareModal\').remove()">取消</button><button class="btn btn-purple" onclick="doShare()">生成链接</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+  window._shareAccounts=av;
+}
+async function doShare(){
+  let ids=[...document.querySelectorAll('.share-cb:checked')].map(c=>parseInt(c.value));
+  let sel=window._shareAccounts.filter(a=>ids.includes(a.id));
+  if(!sel.length){alert('请至少选一个');return}
   let k=await enc(sel.map(a=>({code:a.code,name:a.name,region:a.region,price:a.price,highlight:a.highlight,game:a.game||'',status:rs(a)})));
   try{navigator.clipboard.writeText('https://56gfy.github.io/jxwl/?k='+k);alert('链接已复制！共'+sel.length+'个号')}catch(e){prompt('复制链接：','https://56gfy.github.io/jxwl/?k='+k)}
+  document.getElementById('shareModal')?.remove()
 }
 async function showImport(){
   let k=prompt('粘贴客户选号密钥：');if(!k)return;
