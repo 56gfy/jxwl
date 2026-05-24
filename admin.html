@@ -106,7 +106,8 @@ function card(a){
   if(s==='空闲')ac.push('<button class="btn btn-teal" onclick="doRent('+a.id+')">出租</button>');
   if(s==='已出租'||s==='已到期')ac.push('<button class="btn btn-dark" onclick="doIdle('+a.id+')">归还</button>');
   ac.push('<button class="btn btn-dark" onclick="editAc('+a.id+')">编辑</button>');
-  if(s!=='停用')ac.push('<button class="btn btn-dark" onclick="doOff('+a.id+')">停用</button>');
+  if(s==='停用')ac.push('<button class="btn btn-blue" onclick="doOn('+a.id+')">启用</button>');
+  else ac.push('<button class="btn btn-dark" onclick="doOff('+a.id+')">停用</button>');
   ac.push('<button class="btn btn-red" onclick="doDel('+a.id+')">删</button>');
   return'<div class="card">'+ib+'<div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+STY[s]+'">'+s+'</span></div><div class="row2"><span>'+esc(a.code)+'</span><span>·</span><span>'+esc(a.region)+'</span></div><div class="price-row"><span>¥</span><span class="price">'+(a.price||0).toFixed(0)+'</span><span class="unit">/ 天</span></div>'+(s==='已出租'?'<div class="countdown">'+rem(a)+'</div>':'')+'<div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div><div class="actions">'+ac.join('')+'</div></div></div>';
 }
@@ -117,6 +118,7 @@ function render(){
 }
 function doDel(id){if(confirm('删除？')){accounts=accounts.filter(a=>a.id!==id);save();render()}}
 function doOff(id){let a=accounts.find(a=>a.id===id);if(a){a.status='停用';save();render()}}
+function doOn(id){let a=accounts.find(a=>a.id===id);if(a){a.status='空闲';a.rv=null;a.ru=null;a.rs=null;a.re=null;save();render()}}
 function doIdle(id){let a=accounts.find(a=>a.id===id);if(a){addHist(a);a.status='空闲';a.rv=null;a.ru=null;a.rs=null;a.re=null;save();render()}}
 function doRent(id){let a=accounts.find(a=>a.id===id);if(!a)return;let s=prompt('租几天？','1');let d=parseInt(s);if(!d||d<1)return;a.status='已出租';a.rv=d;a.ru='天';a.rs=nowISO();a.re=new Date(Date.now()+d*86400000).toISOString().slice(0,16);save();render()}
 function showModal(ac){
