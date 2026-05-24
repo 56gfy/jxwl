@@ -39,7 +39,7 @@ body{background:#060910;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFo
 .card .price{font-size:18px;font-weight:900;color:#60a5fa}
 .card .unit{font-size:11px;color:#475569}
 .card .countdown{font-size:11px;color:#e2e8f0;font-weight:700;padding:6px 10px;background:#0b1220;border-radius:10px;margin-bottom:6px}
-.card .highlight{font-size:10px;color:#475569;line-height:1.4;margin-bottom:8px}
+.card .highlight{font-size:10px;color:#f59e0b;line-height:1.4;margin-bottom:8px}
 .card .actions{display:flex;gap:4px;flex-wrap:wrap}
 .card .actions .btn{flex:1;min-width:52px;text-align:center}
 .modal-overlay{position:fixed;inset:0;background:#000000aa;z-index:100;display:flex;align-items:flex-end;justify-content:center}
@@ -74,7 +74,7 @@ const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',
 const STY={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'st-disabled'};
 const GAMES=['','LOL','CF','DNF','永劫无间','和平精英','王者荣耀','原神','魔兽世界','逆战','梦幻西游','传奇'];
 const LEVELS={王者荣耀:['青铜','白银','黄金','铂金','钻石','星耀','王者','荣耀王者'],LOL:['黑铁','青铜','白银','黄金','铂金','钻石','超凡','王者'],和平精英:Array.from({length:100},(_,i)=>i+1+'级'),CF:['新锐','精英','专家','大师','枪王','枪王之王'],DNF:Array.from({length:100},(_,i)=>i+1+'级'),永劫无间:['青铜','白银','黄金','铂金','陨星','蚀月','修罗'],原神:Array.from({length:60},(_,i)=>i+1+'级'),魔兽世界:Array.from({length:80},(_,i)=>i+1+'级'),逆战:['青铜','白银','黄金','钻石','王者'],梦幻西游:Array.from({length:175},(_,i)=>i+1+'级'),传奇:Array.from({length:100},(_,i)=>i+1+'级')};
-function updateLevels(sv){let sel=document.getElementById('f_level'); if(!sel)return; let lv=LEVELS[document.getElementById('f_game').value]||[]; sel.innerHTML='<option value=\\\"\\\">无</option>'+lv.map(l=>'<option'+(sv===l?' selected':'')+'>'+l+'</option>').join('');}
+function updateLevels(sv){let sel=document.getElementById('f_level');if(!sel)return;let lv=LEVELS[document.getElementById('f_game').value]||[];sel.innerHTML='<option value=\"\">无</option>'+lv.map(l=>'<option'+(sv===l?' selected':'')+'>'+l+'</option>').join('');}
 let accounts=[],filter='全部',search='',nextId=1,history=[];
 
 function save(){localStorage.setItem('jx_acc',JSON.stringify(accounts));localStorage.setItem('jx_nid',nextId)}
@@ -111,7 +111,7 @@ function card(a){
   if(s==='停用')ac.push('<button class="btn btn-blue" onclick="doOn('+a.id+')">启用</button>');
   else ac.push('<button class="btn btn-dark" onclick="doOff('+a.id+')">停用</button>');
   ac.push('<button class="btn btn-red" onclick="doDel('+a.id+')">删</button>');
-  return'<div class="card">'+ib+'<div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+STY[s]+'">'+s+'</span></div><div class="row2"><span>'+esc(a.code)+'</span><span>·</span><span>'+esc(a.region)+'</span>'+(a.level?'<span style="color:#f59e0b"> · '+esc(a.level)+'</span>':'')+'</div><div class="price-row"><span>¥</span><span class="price">'+(a.price||0).toFixed(0)+'</span><span class="unit">/ 天</span></div>'+(s==='已出租'?'<div class="countdown">'+rem(a)+'</div>':'')+'<div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div><div class="actions">'+ac.join('')+'</div></div></div>';
+  return'<div class="card">'+ib+'<div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+STY[s]+'">'+s+'</span></div><div class="row2" style="color:#cbd5e1"><span>'+esc(a.code)+'</span><span>·</span><span>'+esc(a.region)+'</span>'+(a.level?'<span style="color:#f59e0b"> · '+esc(a.level)+'</span>':'')+'</div><div class="price-row"><span>¥</span><span class="price">'+(a.price||0).toFixed(0)+'</span><span class="unit">/ 天</span></div>'+(s==='已出租'?'<div class="countdown">'+rem(a)+'</div>':'')+'<div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div><div class="actions">'+ac.join('')+'</div></div></div>';
 }
 function render(){
   let l=accounts;if(filter!=='全部')l=l.filter(a=>rs(a)===filter);
