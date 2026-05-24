@@ -53,6 +53,7 @@ body{background:#060910;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFo
 <div class="container" id="main"></div>
 <script>
 const GAME_EMOJI={LOL:'🎮',DNF:'⚔️',CF:'🔫',永劫无间:'🗡️',原神:'✨',王者荣耀:'👑',吃鸡:'🍗',绝地求生:'🍗',和平精英:'📱',逆战:'💥',魔兽世界:'🐉',梦幻西游:'🐵',传奇:'⚡'};
+const GAME_IMG={吃鸡:'heji.png',和平精英:'heji.png',绝地求生:'heji.png'};
 const SC={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'st-disabled'};
 let allAccounts=[],activeFilter='全部';
 
@@ -74,8 +75,10 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function chip(label,count,filter){const cls=activeFilter===filter?'active':'';return '<span class="chip '+cls+'" onclick="setFilter(\''+filter+'\')">'+label+' '+count+'</span>'}
 function setFilter(f){activeFilter=f;render()}
 function renderCard(a){
-  const g=a.game||'',emoji=GAME_EMOJI[g]||'🎮',p=typeof a.price==='number'?a.price.toFixed(0):'0';
-  return '<div class="card"><div class="img-box">'+(g?'<span class="game-tag">'+esc(g)+'</span>':'')+emoji+'</div><div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+(SC[a.status]||'st-idle')+'">'+esc(a.status||'空闲')+'</span></div><div class="row2"><span class="code">'+esc(a.code)+'</span><span class="dot">·</span><span class="region">'+esc(a.region)+'</span></div><div class="price-row"><span class="currency">¥</span><span class="price">'+p+'</span><span class="unit">/ 天</span></div><div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div></div></div>';
+  const g=a.game||'',imgFile=GAME_IMG[g];
+  let imgHtml=imgFile?'<img src="'+imgFile+'" style="max-height:150px;max-width:100%;object-fit:contain" onerror="this.parentElement.innerHTML=\''+GAME_EMOJI[g]+'\'">':GAME_EMOJI[g]||'🎮';
+  const p=typeof a.price==='number'?a.price.toFixed(0):'0';
+  return '<div class="card"><div class="img-box">'+(g?'<span class="game-tag">'+esc(g)+'</span>':'')+imgHtml+'</div><div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+(SC[a.status]||'st-idle')+'">'+esc(a.status||'空闲')+'</span></div><div class="row2"><span class="code">'+esc(a.code)+'</span><span class="dot">·</span><span class="region">'+esc(a.region)+'</span></div><div class="price-row"><span class="currency">¥</span><span class="price">'+p+'</span><span class="unit">/ 天</span></div><div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div></div></div>';
 }
 function render(){
   const main=document.getElementById('main'),info=document.getElementById('info');
