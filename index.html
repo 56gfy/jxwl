@@ -79,16 +79,15 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function chip(label,count,filter){const cls=activeFilter===filter?'active':'';return '<span class="chip '+cls+'" onclick="setFilter(\''+filter+'\')">'+label+' '+count+'</span>'}
 function setFilter(f){activeFilter=f;render()}
 function renderCard(a){
-  const g=a.game||'',imgFile=GAME_IMG[g],emoji=GAME_EMOJI[g]||GAME_EMOJI[g]===''?'':'🎮';
+  const g=a.game||'',imgFile=GAME_IMG[g],eqImg=a.img||'',emoji=GAME_EMOJI[g]||'🎮';
   let imgHtml;
-  if(imgFile){
-    imgHtml='<img src="'+imgFile+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="emoji-fallback" style="display:none">'+emoji+'</span>';
-  } else {
-    imgHtml='<span class="emoji-fallback">'+emoji+'</span>';
-  }
+  if(eqImg)imgHtml='<img src="'+eqImg+'" style="cursor:pointer" onclick="viewImg(event)">';
+  else if(imgFile)imgHtml='<img src="'+imgFile+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="emoji-fallback" style="display:none">'+emoji+'</span>';
+  else imgHtml='<span class="emoji-fallback">'+emoji+'</span>';
   const p=typeof a.price==='number'?a.price.toFixed(0):'0';
   return '<div class="card"><div class="img-box">'+(g?'<span class="game-tag">'+esc(g)+'</span>':'')+imgHtml+'</div><div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+(SC[a.status]||'st-idle')+'">'+esc(a.status||'空闲')+'</span></div><div class="row2"><span class="code">'+esc(a.code)+'</span><span class="dot">·</span><span class="region">'+esc(a.region)+'</span></div><div class="price-row"><span class="currency">¥</span><span class="price">'+p+'</span><span class="unit">/ 天</span></div><div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div></div></div>';
 }
+function viewImg(e){e.stopPropagation();let s=e.target.src,d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#000000cc;z-index:200;display:flex;align-items:center;justify-content:center';d.innerHTML='<img src="'+s+'" style="max-width:95vw;max-height:95vh;border-radius:12px" onclick="event.stopPropagation()">';d.onclick=function(){d.remove()};document.body.appendChild(d)}
 function render(){
   const main=document.getElementById('main'),info=document.getElementById('info');
   let list=allAccounts;
