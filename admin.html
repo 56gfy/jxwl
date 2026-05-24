@@ -133,12 +133,12 @@ function showModal(ac){
   document.body.insertAdjacentHTML('beforeend',h);
 }
 function showAdd(){showModal(null)}
-function editAc(id){showModal(accounts.find(a=>a.id===id))}
+function editAc(id){showModal(accounts.find(a=>a.id==id))}
 function saveAc(id){
   let g=n=>document.getElementById('f_'+n).value.trim();
   let a={code:g('code'),name:g('name'),region:g('region'),text:g('text'),price:parseFloat(g('price'))||0,highlight:g('hl'),game:document.getElementById('f_game').value,status:document.getElementById('f_status').value};
   if(!a.code||!a.name||!a.region){alert('编号/名称/区服必填');return}
-  if(id){let o=accounts.find(x=>x.id===id);Object.assign(o,a)}else{a.id=accounts.length?Math.max(...accounts.map(x=>x.id))+1:1;a.rv=null;a.ru=null;a.rs=null;a.re=null;accounts.unshift(a)}
+  if(id){let o=accounts.find(x=>x.id==id);Object.assign(o,a)}else{a.id=accounts.length?Math.max(...accounts.map(x=>x.id))+1:1;a.rv=null;a.ru=null;a.rs=null;a.re=null;accounts.unshift(a)}
   save();render();document.querySelector('.modal-overlay')?.remove()
 }
 async function showShare(){
