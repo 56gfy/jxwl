@@ -22,9 +22,12 @@ body{background:#060910;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFo
 .error{background:linear-gradient(135deg,#3f1d1d,#2d1010);color:#fca5a5;border:1px solid #7f1d1d;border-radius:16px;padding:14px 18px;margin:8px 0;font-size:13px;line-height:1.5}
 .card{background:linear-gradient(145deg,#0f172a,#111a31);border:1px solid #1a2438;border-radius:20px;overflow:hidden;margin-bottom:10px;transition:transform .15s,border .2s,box-shadow .2s}
 .card:active{transform:scale(.98);border-color:#3b82f6;box-shadow:0 0 20px #3b82f611}
-.card .img-box{height:160px;background:linear-gradient(180deg,#0a101f,#0b1322);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;overflow:hidden}
-.card .img-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:32px;background:linear-gradient(0deg,#0f172a,transparent)}
-.card .img-box .game-tag{position:absolute;top:10px;left:10px;background:#00000055;backdrop-filter:blur(8px);color:#cbd5e1;padding:4px 10px;border-radius:10px;font-size:10px;font-weight:700}
+.card .img-box{height:170px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#0a101f}
+.card .img-box img{width:100%;height:100%;object-fit:cover}
+.card .img-box::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#0f172a 100%),linear-gradient(0deg,transparent 70%,#0f172a44 100%),linear-gradient(90deg,#0f172a44 0%,transparent 15%,transparent 85%,#0f172a44 100%);z-index:1;pointer-events:none}
+.card .img-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(0deg,#0f172a,transparent);z-index:1}
+.card .img-box .game-tag{position:absolute;top:10px;left:10px;background:#00000055;backdrop-filter:blur(8px);color:#cbd5e1;padding:4px 10px;border-radius:10px;font-size:10px;font-weight:700;z-index:2}
+.card .img-box .emoji-fallback{font-size:48px;z-index:1;position:relative}
 .card .body{padding:14px 16px 16px}
 .card .row1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .card .name{font-size:15px;font-weight:800;color:#f1f5f9;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -52,8 +55,8 @@ body{background:#060910;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFo
 <div class="topbar"><div class="title">账号展示</div><div class="sub" id="info">加载中...</div></div>
 <div class="container" id="main"></div>
 <script>
-const GAME_EMOJI={LOL:'🎮',DNF:'⚔️',CF:'🔫',永劫无间:'🗡️',原神:'✨',王者荣耀:'👑',吃鸡:'🍗',绝地求生:'🍗',和平精英:'📱',逆战:'💥',魔兽世界:'🐉',梦幻西游:'🐵',传奇:'⚡'};
-const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',吃鸡:'heji.png',和平精英:'heji.png',绝地求生:'heji.png',王者荣耀:'wzry.png',原神:'ys.png',魔兽世界:'mssj.png',逆战:'nz.png',梦幻西游:'mhxy.png',传奇:'cq.png'};
+const GAME_EMOJI={LOL:'🎮',DNF:'⚔️',CF:'🔫',永劫无间:'🗡️',原神:'✨',王者荣耀:'👑',和平精英:'',绝地求生:'',逆战:'💥',魔兽世界:'🐉',梦幻西游:'🐵',传奇:'⚡'};
+const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',和平精英:'heji.png',绝地求生:'heji.png',王者荣耀:'wzry.png',原神:'ys.png',魔兽世界:'mssj.png',逆战:'nz.png',梦幻西游:'mhxy.png',传奇:'cq.png'};
 const SC={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'st-disabled'};
 let allAccounts=[],activeFilter='全部';
 
@@ -75,8 +78,13 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function chip(label,count,filter){const cls=activeFilter===filter?'active':'';return '<span class="chip '+cls+'" onclick="setFilter(\''+filter+'\')">'+label+' '+count+'</span>'}
 function setFilter(f){activeFilter=f;render()}
 function renderCard(a){
-  const g=a.game||'',imgFile=GAME_IMG[g];
-  let imgHtml=imgFile?'<img src="'+imgFile+'" style="max-height:150px;max-width:100%;object-fit:contain" onerror="this.parentElement.innerHTML=\''+GAME_EMOJI[g]+'\'">':GAME_EMOJI[g]||'🎮';
+  const g=a.game||'',imgFile=GAME_IMG[g],emoji=GAME_EMOJI[g]||GAME_EMOJI[g]===''?'':'🎮';
+  let imgHtml;
+  if(imgFile){
+    imgHtml='<img src="'+imgFile+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="emoji-fallback" style="display:none">'+emoji+'</span>';
+  } else {
+    imgHtml='<span class="emoji-fallback">'+emoji+'</span>';
+  }
   const p=typeof a.price==='number'?a.price.toFixed(0):'0';
   return '<div class="card"><div class="img-box">'+(g?'<span class="game-tag">'+esc(g)+'</span>':'')+imgHtml+'</div><div class="body"><div class="row1"><span class="name">'+esc(a.name)+'</span><span class="status '+(SC[a.status]||'st-idle')+'">'+esc(a.status||'空闲')+'</span></div><div class="row2"><span class="code">'+esc(a.code)+'</span><span class="dot">·</span><span class="region">'+esc(a.region)+'</span></div><div class="price-row"><span class="currency">¥</span><span class="price">'+p+'</span><span class="unit">/ 天</span></div><div class="highlight">'+esc(a.highlight||'暂无亮点')+'</div></div></div>';
 }
