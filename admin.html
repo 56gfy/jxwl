@@ -123,7 +123,7 @@ function doIdle(id){let a=accounts.find(a=>a.id===id);if(a){addHist(a);a.status=
 function doRent(id){let a=accounts.find(a=>a.id===id);if(!a)return;let s=prompt('租几天？','1');let d=parseInt(s);if(!d||d<1)return;a.status='已出租';a.rv=d;a.ru='天';a.rs=nowISO();a.re=new Date(Date.now()+d*86400000).toISOString().slice(0,16);save();render()}
 function showModal(ac){
   let ed=!!ac,h='<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3>'+(ed?'编辑':'新增')+'账号</h3>';
-  let f=(l,n,v,t='input')=>'<label>'+l+'</label><'+t+' id="f_'+n+'">'+esc(v||'')+'</'+(t==='input'?'input>':t+'>');
+  let f=(l,n,v,t='input')=>t==='input'?'<label>'+l+'</label><input id="f_'+n+'" value="'+esc(v||'')+'">':'<label>'+l+'</label><'+t+' id="f_'+n+'">'+esc(v||'')+'</'+t+'>';
   h+=f('编号','code',ac?.code);h+=f('名称','name',ac?.name);h+=f('区服','region',ac?.region);
   h+=f('信息','text',ac?.text,'textarea');h+=f('价格','price',ac?.price);
   h+=f('亮点','hl',ac?.highlight,'textarea');
