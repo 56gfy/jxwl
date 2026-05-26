@@ -213,32 +213,36 @@ async function doDel(id){if(!confirm('确定删除？'))return;accounts=accounts
 async function doOff(id){let a=accounts.find(a=>a.id===id);if(a){a.status='停用';save();render();await syncToGit()}}
 async function doOn(id){let a=accounts.find(a=>a.id===id);if(a){a.status='空闲';a.rv=null;a.ru=null;a.rs=null;a.re=null;save();render();await syncToGit()}}
 async function doIdle(id){let a=accounts.find(a=>a.id===id);if(a){addHist(a);a.status='空闲';a.rv=null;a.ru=null;a.rs=null;a.re=null;save();render();await syncToGit()}}
-async function doRent(id){
-  let a=accounts.find(a=>a.id===id);if(!a)return;
-  if(a.prices&&a.prices.length>0){
-    // Show price selection
-    let opts=a.prices.map((p,i)=>`${i+1}. ¥${p.price}/${p.dur}${p.unit}`).join('\n');
-    let idx=prompt(`选择价格套餐:\n${opts}\n\n输入数字 1-${a.prices.length} 选择，或直接输入自定义如 "3小时"`);
-    if(!idx)return;
-    let pi=parseInt(idx);
-    if(!isNaN(pi)&&pi>=1&&pi<=a.prices.length){
-      let p=a.prices[pi-1];
-      a.status='已出租';a.rv=p.dur;a.ru=p.unit;a.rs=nowISO();
-      if(p.unit==='小时')a.re=new Date(Date.now()+p.dur*3600000).toISOString().slice(0,16);
-      else a.re=new Date(Date.now()+p.dur*86400000).toISOString().slice(0,16);
-      save();render();await syncToGit();return
-    }
-  }
-  // Custom input fallback
-  let s=prompt('输入时长，如：15小时、2天');if(!s)return;
-  let m=s.match(/^(\d+(?:\.\d+)?)\s*(小时|天)$/);if(!m){alert('格式错误');return}
-  let d=parseFloat(m[1]),unit=m[2];if(!d||d<1)return;
-  a.status='已出租';
-  if(unit==='小时'){a.rv=d;a.ru='小时';a.rs=nowISO();a.re=new Date(Date.now()+d*3600000).toISOString().slice(0,16)}
-  else{a.rv=d;a.ru='天';a.rs=nowISO();a.re=new Date(Date.now()+d*86400000).toISOString().slice(0,16)}
-  save();render();await syncToGit()
-}
+function doRent(id){
+	  let a=accounts.find(a=>a.id===id);if(!a)return;
+	  let h=`<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3>出租 · ${esc(a.name)}</h3>`;
+	  if(a.prices&&a.prices.length>0){
+	    h+=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">`;
+	    a.prices.forEach((p,i)=>{
+	      h+=`<button class="btn btn-blue" style="flex:1;min-width:60px;padding:10px;font-size:13px" onclick="doRentConfirm(${id},${p.dur},'${p.unit}')">¥${p.price}<br><small>${p.dur}${p.unit}</small></button>`
+	    });
+	    h+=`</div><div style="text-align:center;color:#6b7280;font-size:11px;margin-bottom:8px">— 或自定义 —</div>`;
+	  }
+	  h+=`<div style="display:flex;gap:8px;align-items:center"><input id="rent_num" type="number" min="1" step="1" value="1" style="flex:1;text-align:center;font-size:18px!important;font-weight:700">
+	  <select id="rent_unit" style="width:80px;flex:none"><option value="小时">小时</option><option value="天">天</option></select></div>
+	  <div class="btn-row"><button class="btn btn-dark" onclick="this.closest('.modal-overlay').remove()">取消</button><button class="btn btn-teal" onclick="doRentConfirm(${id})">确定出租</button></div></div></div>`;
+	  document.body.insertAdjacentHTML('beforeend',h);
+	  setTimeout(()=>document.getElementById('rent_num')?.focus(),100)
+	}
 
+	function doRentConfirm(id,dur,unit){
+	  let a=accounts.find(a=>a.id===id);if(!a)return;
+	  if(!dur||!unit){
+	    dur=parseFloat(document.getElementById('rent_num')?.value);
+	    unit=document.getElementById('rent_unit')?.value;
+	    if(!dur||dur<1){alert('请输入正确的时长');return}
+	  }
+	  a.status='已出租';a.rv=dur;a.ru=unit;a.rs=nowISO();
+	  if(unit==='小时')a.re=new Date(Date.now()+dur*3600000).toISOString().slice(0,16);
+	  else a.re=new Date(Date.now()+dur*86400000).toISOString().slice(0,16);
+	  document.querySelector('.modal-overlay')?.remove();
+	  save();render();syncToGit()
+	}
 let _tempPriceCount=0;
 function showModal(ac){
   let ed=!!ac; _tempPriceCount=0;
