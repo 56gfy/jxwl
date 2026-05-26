@@ -179,7 +179,7 @@ function save(){localStorage.setItem('jx_acc',JSON.stringify(accounts));localSto
 function load(){try{let a=localStorage.getItem('jx_acc');if(a){accounts=JSON.parse(a)}}catch(e){}nextId=1;accounts.forEach(x=>{if(x.id>=nextId)nextId=x.id+1});let sn=parseInt(localStorage.getItem('jx_nid')||'0');if(sn>nextId)nextId=sn;try{let h=localStorage.getItem('jx_hist');if(h)history=JSON.parse(h)}catch(e){}}
 function nowISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&a.re<=Date.now())return'已到期';return a.status}
-function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=a.re-Date.now();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);return '⏱'+(dd>0?dd+'天':'')+(hh>0?hh+'小时':'')}
+function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=a.re-Date.now();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);return '剩余'+(dd>0?dd+'天':'')+(hh>0?hh+'小时':'')}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function showLightbox(src){let i=document.getElementById('lightboxImg');i.style.transform='';i.src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
 function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}

@@ -91,7 +91,7 @@ function getRemain(a){
   let d=a.re-Date.now();
   if(d<=0)return'';
   let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);
-  return '⏱ '+(dd>0?dd+'天 ':'')+hh+'小时';
+  return '剩余'+(dd>0?dd+'天':'')+hh+'小时';
 }
 function formatPrices(prices){
   if(!prices||!prices.length)return'';
