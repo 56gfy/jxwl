@@ -59,7 +59,7 @@ input:focus,textarea:focus,select:focus{border-color:#6366f1!important}
 .bottom-bar .btn{flex:1;padding:10px;font-size:11px}
 .sync-status{font-size:10px;padding:2px 8px;border-radius:10px;margin-left:8px;display:inline-flex;align-items:center;gap:4px}
 .sync-ok{background:#22c55e33;color:#22c55e}.sync-fail{background:#ef444433;color:#ef4444}.sync-off{background:#6b728033;color:#6b7280}
-.lightbox{position:fixed;inset:0;z-index:999;background:#000000ee;display:none;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s}
+.lightbox{position:fixed;inset:0;z-index:999;background:#000000ee;display:none;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s;touch-action:none}
 .lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px}
 .lightbox .close{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#ffffff22;border-radius:50%;backdrop-filter:blur(10px)}
 .lightbox .close:hover{background:#ffffff44}
@@ -183,14 +183,23 @@ function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=a.re-Date.n
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function showLightbox(src){let i=document.getElementById('lightboxImg');i.style.transform='';i.src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
 function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}
-// Lightbox zoom: pinch, double-tap, scroll
-(function(){let lb=document.getElementById('lightbox'),img=document.getElementById('lightboxImg'),cl=document.getElementById('lbClose'),_lz=1,_ld=0,_lt=0;if(!lb)return;
+// Lightbox zoom: pinch/pan/double-tap/scroll
+(function(){let lb=document.getElementById('lightbox'),img=document.getElementById('lightboxImg'),cl=document.getElementById('lbClose');
+let _lz=1,_lx=0,_ly=0,_ld=0,_lt=0,_px=0,_py=0,_ps=0;if(!lb)return;
+function ap(){img.style.transform='translate('+_lx+'px,'+_ly+'px) scale('+_lz+')'}
 lb.addEventListener('click',function(e){if(e.target===lb||e.target===cl)hideLightbox()});
-lb.addEventListener('touchstart',function(e){if(e.touches.length===2){_ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);e.preventDefault()}},{passive:false});
-lb.addEventListener('touchmove',function(e){if(e.touches.length===2&&_ld>0){let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_lz=Math.max(1,Math.min(5,_lz*d/_ld));_ld=d;img.style.transform='scale('+_lz+')';e.preventDefault()}},{passive:false});
+lb.addEventListener('touchstart',function(e){
+if(e.touches.length===2){_ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_ps=_lz;e.preventDefault()}
+else if(e.touches.length===1&&_lz>1){_px=e.touches[0].clientX-_lx;_py=e.touches[0].clientY-_ly}
+},{passive:false});
+lb.addEventListener('touchmove',function(e){
+if(e.touches.length===2&&_ld>0){let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),f=d/_ld,_cx=(e.touches[0].clientX+e.touches[1].clientX)/2,_cy=(e.touches[0].clientY+e.touches[1].clientY)/2;_lz=Math.max(1,Math.min(5,_ps*f));_lx=_cx+(_lx-_cx)*f;_ly=_cy+(_ly-_cy)*f;ap();e.preventDefault()}
+else if(e.touches.length===1&&_lz>1){_lx=e.touches[0].clientX-_px;_ly=e.touches[0].clientY-_py;ap();e.preventDefault()}
+},{passive:false});
 lb.addEventListener('touchend',function(){_ld=0});
-img.addEventListener('click',function(){let t=Date.now();if(t-_lt<300){_lz=_lz>1.5?1:2.5;img.style.transform='scale('+_lz+')';_lt=0}else _lt=t});
-img.addEventListener('wheel',function(e){e.preventDefault();_lz=Math.max(1,Math.min(5,_lz-e.deltaY*0.01));img.style.transform='scale('+_lz+')'},{passive:false})})();
+img.addEventListener('click',function(){let t=Date.now();if(t-_lt<300){_lz=_lz>1.5?1:2.5;_lx=0;_ly=0;ap();_lt=0}else _lt=t});
+img.addEventListener('wheel',function(e){e.preventDefault();let f=1-e.deltaY*0.01;_lz=Math.max(1,Math.min(5,_lz*f));_lx=e.clientX+(_lx-e.clientX)*f;_ly=e.clientY+(_ly-e.clientY)*f;ap()},{passive:false});
+window.showLightbox=function(src){_lz=1;_lx=0;_ly=0;img.style.transform='';img.src=src;lb.style.display='flex';document.body.style.overflow='hidden'}})();
 function renderStats(){let t=0,il=0,rt=0,ex=0;accounts.forEach(a=>{t++;let s=rs(a);if(s==='空闲')il++;if(s==='已出租')rt++;if(s==='已到期')ex++});return '<div class="stats">'+['全部','空闲','已出租','已到期'].map(s=>'<div class="stat'+(filter===s?' active':'')+'" onclick="filter=\''+s+'\';render()">'+s+'<b>'+{全部:t,空闲:il,已出租:rt,已到期:ex}[s]+'</b></div>').join('')+'</div>'}
 function formatPrices(prices){
   if(!prices||!prices.length)return'';
