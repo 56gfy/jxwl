@@ -177,9 +177,9 @@ function uploadImage(file){
 
 function save(){localStorage.setItem('jx_acc',JSON.stringify(accounts));localStorage.setItem('jx_nid',nextId);localStorage.setItem('jx_hist',JSON.stringify(history.slice(0,200)))}
 function load(){try{let a=localStorage.getItem('jx_acc');if(a){accounts=JSON.parse(a)}}catch(e){}nextId=1;accounts.forEach(x=>{if(x.id>=nextId)nextId=x.id+1});let sn=parseInt(localStorage.getItem('jx_nid')||'0');if(sn>nextId)nextId=sn;try{let h=localStorage.getItem('jx_hist');if(h)history=JSON.parse(h)}catch(e){}}
-function nowISO(){return new Date().toISOString().slice(0,16)}
-function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&new Date(a.re)<=new Date())return'已到期';return a.status}
-function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=new Date(a.re)-new Date();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);return '⏱'+(dd>0?dd+'天':'')+(hh>0?hh+'小时':'')}
+function nowISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&a.re<=Date.now())return'已到期';return a.status}
+function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=a.re-Date.now();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);return '⏱'+(dd>0?dd+'天':'')+(hh>0?hh+'小时':'')}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
 function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}
@@ -238,8 +238,8 @@ function doRent(id){
 	    if(!dur||dur<1){alert('请输入正确的时长');return}
 	  }
 	  a.status='已出租';a.rv=dur;a.ru=unit;a.rs=nowISO();
-	  if(unit==='小时')a.re=new Date(Date.now()+dur*3600000).toISOString().slice(0,16);
-	  else a.re=new Date(Date.now()+dur*86400000).toISOString().slice(0,16);
+	  if(unit==='小时')a.re=Date.now()+dur*3600000;
+	  else a.re=Date.now()+dur*86400000;
 	  document.querySelector('.modal-overlay')?.remove();
 	  save();render();syncToGit()
 	}

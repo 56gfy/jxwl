@@ -66,12 +66,12 @@ function setFilter(f){activeFilter=f;render()}
 function getStatus(a){
   if(a.status==='停用')return'停用';
   if(a.status==='空闲')return'空闲';
-  if(a.re&&new Date(a.re)<=new Date())return'已到期';
+  if(a.re&&a.re<=Date.now())return'已到期';
   return a.status;
 }
 function getRemain(a){
   if(getStatus(a)!=='已出租'||!a.re)return'';
-  let d=new Date(a.re)-new Date();
+  let d=a.re-Date.now();
   if(d<=0)return'';
   let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);
   return '⏱ '+(dd>0?dd+'天 ':'')+hh+'小时';
