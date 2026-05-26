@@ -25,7 +25,7 @@ input:focus,textarea:focus,select:focus{border-color:#6366f1!important}
 .btn:active{transform:scale(.96)}
 .btn-blue{background:#6366f1;color:#fff}.btn-purple{background:#a855f7;color:#fff}.btn-teal{background:#14b8a6;color:#fff}.btn-dark{background:#1a1a1a;color:#e5e5e5;border:1px solid #ffffff12}.btn-red{background:#ef4444;color:#fff}.btn-green{background:#22c55e;color:#fff}
 .card{background:rgba(255,255,255,0.05);border:1px solid #ffffff12;border-radius:20px;overflow:hidden;margin-bottom:10px;box-shadow:0 4px 20px #00000044}
-.card .img-box{height:140px;background:#111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.card .img-box{height:200px;background:#111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .card .img-box img{width:100%;height:100%;object-fit:contain}
 .card .img-box .game-tag{position:absolute;top:8px;left:8px;background:#00000066;backdrop-filter:blur(10px);color:#fff;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;z-index:2}
 .card .body{padding:12px 14px 14px}
@@ -59,11 +59,17 @@ input:focus,textarea:focus,select:focus{border-color:#6366f1!important}
 .bottom-bar .btn{flex:1;padding:10px;font-size:11px}
 .sync-status{font-size:10px;padding:2px 8px;border-radius:10px;margin-left:8px;display:inline-flex;align-items:center;gap:4px}
 .sync-ok{background:#22c55e33;color:#22c55e}.sync-fail{background:#ef444433;color:#ef4444}.sync-off{background:#6b728033;color:#6b7280}
+.lightbox{position:fixed;inset:0;z-index:999;background:#000000ee;display:none;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s}
+.lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px}
+.lightbox .close{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#ffffff22;border-radius:50%;backdrop-filter:blur(10px)}
+.lightbox .close:hover{background:#ffffff44}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
 <div class="topbar"><span class="logo">今心网络</span><span class="title">管理</span><span id="syncBadge" class="sync-status sync-off">⚪离线</span></div>
 <div class="container" id="app"></div>
+<div class="lightbox" id="lightbox" onclick="hideLightbox()"><span class="close">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
 <div class="bottom-bar">
   <button class="btn btn-blue" onclick="showAdd()">＋新增</button>
   <button class="btn btn-green" onclick="if(gitToken)syncNow();else showGitSettings()">同步</button>
@@ -129,23 +135,40 @@ async function syncNow(){
   }
 }
 
-// Upload image - convert to compressed base64 stored in data.json
+// Upload image to GitHub repo (高清原图), fallback to inline base64
 function uploadImage(file){
   return new Promise((resolve)=>{
     let reader=new FileReader();
-    reader.onload=function(e){
-      let url=e.target.result;
+    reader.onload=async function(e){
+      let base64=e.target.result.split(',')[1];
+      let ext=file.name.split('.').pop().match(/^(png|jpg|jpeg|gif|webp)$/i)?file.name.split('.').pop():'jpg';
+      let name='img_'+Date.now()+'.'+ext;
+      // Try uploading to GitHub images/ directory
+      try{
+        let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/images/${name}`,{
+          method:'PUT',
+          headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},
+          body:JSON.stringify({message:'upload image',content:base64,branch:GIT_BRANCH})
+        });
+        if(r.ok||r.status===201){
+          resolve(`https://raw.githubusercontent.com/${GIT_USER}/${GIT_REPO}/${GIT_BRANCH}/images/${name}`);
+          return
+        }
+        let d=await r.json().catch(()=>({}));
+        console.error('GitHub image upload fail:',d.message)
+      }catch(e){console.error('GitHub image upload err:',e)}
+      // Fallback: compress and store inline
       let img=new Image();
       img.onload=function(){
-        let c=document.createElement('canvas'),maxW=400;
+        let c=document.createElement('canvas'),maxW=800;
         let w=img.width,h=img.height;
         if(w>maxW){h=h*maxW/w;w=maxW}
         c.width=w;c.height=h;
         c.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(c.toDataURL('image/jpeg',0.6));
+        resolve(c.toDataURL('image/jpeg',0.85));
       };
-      img.onerror=function(){resolve(url)}; // fallback
-      img.src=url;
+      img.onerror=function(){resolve(e.target.result)};
+      img.src=e.target.result;
     };
     reader.onerror=function(){resolve(null)};
     reader.readAsDataURL(file)
@@ -158,6 +181,8 @@ function nowISO(){return new Date().toISOString().slice(0,16)}
 function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&new Date(a.re)<=new Date())return'已到期';return a.status}
 function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=new Date(a.re)-new Date();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);return '⏱'+(dd>0?dd+'天':'')+(hh>0?hh+'小时':'')}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
+function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}
 function renderStats(){let t=0,il=0,rt=0,ex=0;accounts.forEach(a=>{t++;let s=rs(a);if(s==='空闲')il++;if(s==='已出租')rt++;if(s==='已到期')ex++});return '<div class="stats">'+['全部','空闲','已出租','已到期'].map(s=>'<div class="stat'+(filter===s?' active':'')+'" onclick="filter=\''+s+'\';render()">'+s+'<b>'+{全部:t,空闲:il,已出租:rt,已到期:ex}[s]+'</b></div>').join('')+'</div>'}
 function formatPrices(prices){
   if(!prices||!prices.length)return'';
@@ -166,7 +191,7 @@ function formatPrices(prices){
 function card(a){
   let s=rs(a),g=a.game||'',im=GAME_IMG[g],ac=[];
   let ib='<div class="img-box">';
-  if(a.equip)ib+=`<img src="${esc(a.equip)}" onerror="this.style.display='none'">`;
+  if(a.equip)ib+=`<img src="${esc(a.equip)}" onclick="showLightbox(this.src)" style="cursor:zoom-in" onerror="this.style.display='none'">`;
   else if(im)ib+=`<img src="${im}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span style="display:none;font-size:36px">🎮</span>`;
   else ib+='<span style="font-size:36px">🎮</span>';
   ib+='<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(0,0,0,0.6) 0%,transparent 40%)"></div>'+(g?`<span class="game-tag">${esc(g)}</span>`:'')+'</div>';

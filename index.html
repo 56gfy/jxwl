@@ -22,8 +22,8 @@ body{background:#0d0d0d;color:#e5e5e5;font-family:-apple-system,BlinkMacSystemFo
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading p{font-size:13px;color:#6b7280}
 .card{background:rgba(255,255,255,0.05);border:1px solid #ffffff12;border-radius:20px;overflow:hidden;margin-bottom:10px;box-shadow:0 4px 20px #00000044}
-.card .img-box{height:110px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#111}
-.card .img-box img{width:100%;height:100%;object-fit:cover}
+.card .img-box{height:180px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#111}
+.card .img-box img{width:100%;height:100%;object-fit:contain}
 .card .img-box .game-tag{position:absolute;top:8px;left:8px;background:#00000066;backdrop-filter:blur(10px);color:#fff;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;z-index:2}
 .card .body{padding:14px 16px 16px}
 .card .row1{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -40,11 +40,17 @@ body{background:#0d0d0d;color:#e5e5e5;font-family:-apple-system,BlinkMacSystemFo
 .stats-bar::-webkit-scrollbar{display:none}
 .stats-bar .chip{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.06);color:#8e8e93;transition:all .15s;white-space:nowrap;border:1px solid #ffffff12}
 .stats-bar .chip.active{background:#6366f1;color:#fff;border-color:transparent;box-shadow:0 4px 14px #6366f133}
+.lightbox{position:fixed;inset:0;z-index:999;background:#000000ee;display:none;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s}
+.lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px}
+.lightbox .close{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;cursor:pointer;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#ffffff22;border-radius:50%;backdrop-filter:blur(10px)}
+.lightbox .close:hover{background:#ffffff44}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
 <div class="topbar"><div class="logo-row"><span class="logo-badge">今心网络</span><span class="title">账号展示</span></div><div class="sub" id="info">加载中...</div></div>
 <div class="container" id="main"></div>
+<div class="lightbox" id="lightbox" onclick="hideLightbox()"><span class="close">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
 <script>
 const GAME_EMOJI={LOL:'🎮',DNF:'⚔️',CF:'🔫',永劫无间:'🗡️',原神:'✨',王者荣耀:'👑',和平精英:'',绝地求生:'',逆战:'💥',魔兽世界:'🐉',梦幻西游:'🐵',传奇:'⚡'};
 const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',吃鸡:'heji.png',和平精英:'heji.png',绝地求生:'heji.png',王者荣耀:'wzry.png',原神:'ys.png',魔兽世界:'mssj.png',逆战:'nz.png',梦幻西游:'mhxy.png',传奇:'cq.png'};
@@ -52,6 +58,8 @@ const SC={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'
 let allAccounts=[],activeFilter='全部';
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
+function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}
 function chip(label,count,filter){const cls=activeFilter===filter?'active':'';return '<span class="chip '+cls+'" onclick="setFilter(\''+filter+'\')">'+label+' '+count+'</span>'}
 function setFilter(f){activeFilter=f;render()}
 
@@ -75,7 +83,7 @@ function formatPrices(prices){
 function renderCard(a){
   const g=a.game||'',imgFile=GAME_IMG[g],emoji=GAME_EMOJI[g]||'🎮';
   let imgHtml='';
-  if(a.equip)imgHtml='<img src="'+esc(a.equip)+'" onerror="this.style.display=\'none\'">';
+  if(a.equip)imgHtml='<img src="'+esc(a.equip)+'" onclick="showLightbox(this.src)" style="cursor:zoom-in" onerror="this.style.display=\'none\'">';
   else if(imgFile)imgHtml='<img src="'+imgFile+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="emoji-fallback" style="display:none">'+emoji+'</span>';
   else imgHtml='<span class="emoji-fallback">'+emoji+'</span>';
   const s=getStatus(a),pricesHtml=formatPrices(a.prices),remain=getRemain(a);
