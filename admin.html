@@ -66,7 +66,7 @@ input:focus,textarea:focus,select:focus{border-color:#6366f1!important}
 <div class="container" id="app"></div>
 <div class="bottom-bar">
   <button class="btn btn-blue" onclick="showAdd()">＋新增</button>
-  <button class="btn btn-green" onclick="showGitSettings()">同步</button>
+  <button class="btn btn-green" onclick="if(gitToken)syncNow();else showGitSettings()">同步</button>
   <button class="btn btn-dark" onclick="showHistory()">记录</button>
   <button class="btn btn-dark" onclick="doExport()">导出</button>
 </div>
@@ -82,21 +82,44 @@ function loadGitToken(){gitToken=localStorage.getItem('jx_git_token')||''}
 function saveGitToken(t){gitToken=t;localStorage.setItem('jx_git_token',t)}
 loadGitToken();
 
-function updateSyncBadge(ok){
+let lastSyncTime=0;
+function updateSyncBadge(ok,syncing){
   let b=document.getElementById('syncBadge');
-  if(!gitToken){b.className='sync-status sync-off';b.textContent='⚪离线'}
-  else b.className='sync-status '+(ok?'sync-ok':'sync-fail');b.textContent=ok?'🟢已同步':'🔴失败'
+  if(syncing){b.className='sync-status sync-ok';b.textContent='🔄同步中...';return}
+  if(!gitToken){b.className='sync-status sync-off';b.textContent='⚪离线';return}
+  if(ok)lastSyncTime=Date.now();
+  b.className='sync-status '+(ok?'sync-ok':'sync-fail');
+  let t=ok?'🟢已同步':'🔴失败';
+  if(lastSyncTime){
+    let s=Math.floor((Date.now()-lastSyncTime)/1000);
+    t+=' '+(s<60?s+'秒前':Math.floor(s/60)+'分前')
+  }
+  b.textContent=t
 }
 async function getGitSha(){try{let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{headers:{Authorization:'token '+gitToken}});if(!r.ok)return null;return (await r.json()).sha}catch(e){return null}}
-async function readFromGit(){try{let r=await fetch(`https://raw.githubusercontent.com/${GIT_USER}/${GIT_REPO}/${GIT_BRANCH}/${GIT_FILE}`);if(!r.ok)return null;return await r.json()}catch(e){return null}}
+async function readFromGit(){
+  try{
+    let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{headers:{Authorization:'token '+gitToken}});
+    if(!r.ok)return null;
+    let j=await r.json();
+    return JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))
+  }catch(e){return null}
+}
 async function writeToGit(data,sha){try{
   let body={message:'sync',content:btoa(unescape(encodeURIComponent(JSON.stringify(data)))),branch:GIT_BRANCH};
   if(sha)body.sha=sha;
   let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{method:'PUT',headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
   let ok=r.ok||r.status===201;updateSyncBadge(ok);return ok
 }catch(e){updateSyncBadge(false);return false}}
-async function syncToGit(){if(!gitToken)return;let sha=await getGitSha();updateSyncBadge(false);await writeToGit({accounts,nextId,history:history.slice(0,200)},sha)}
-async function syncFromGit(){if(!gitToken)return;updateSyncBadge(false);let d=await readFromGit();if(d&&d.accounts){accounts=d.accounts;nextId=d.nextId||1;if(d.history)history=d.history;updateSyncBadge(true);render();return true}updateSyncBadge(false);return false}
+async function syncToGit(){if(!gitToken)return false;let sha=await getGitSha();updateSyncBadge(false);return await writeToGit({accounts,nextId,history:history.slice(0,200)},sha)}
+async function syncFromGit(){if(!gitToken)return false;updateSyncBadge(false);let d=await readFromGit();if(d&&d.accounts){accounts=d.accounts;nextId=d.nextId||1;if(d.history)history=d.history;updateSyncBadge(true);render();return true}updateSyncBadge(false);return false}
+async function syncNow(){
+  if(!gitToken){alert('请先配置 Token');return}
+  updateSyncBadge(false,true);
+  let ok=await syncToGit();
+  if(ok)ok=await syncFromGit();
+  if(ok)updateSyncBadge(true);else alert('同步失败！请检查 Token 和网络')
+}
 
 // Upload image - convert to compressed base64 stored in data.json
 function uploadImage(file){
@@ -236,7 +259,7 @@ async function saveAc(id){
 }
 function showGitSettings(){
   let h=`<div class="modal-overlay" onclick="if(event.target===this)this.remove()"><div class="modal"><h3>GitHub 同步</h3><label>Token</label><input id="f_token" value="${esc(gitToken)}"><label>仓库</label><input value="${GIT_USER}/${GIT_REPO}" readonly style="opacity:0.6">`;
-  h+=gitToken?'<div style="color:#22c55e;font-size:13px">✅ 已配置</div><div class="btn-row"><button class="btn btn-teal" onclick="testGit()">测试</button><button class="btn btn-red" onclick="document.getElementById(\'f_token\').value=\'\'">清除</button></div>':'<div style="color:#f59e0b;font-size:13px">⚠️ 未配置</div>';
+  h+=gitToken?'<div style="color:#22c55e;font-size:13px">✅ 已配置</div><div class="btn-row"><button class="btn btn-teal" onclick="testGit()">测试</button><button class="btn btn-blue" onclick="syncNow()">立即同步</button><button class="btn btn-red" onclick="document.getElementById(\'f_token\').value=\'\'">清除</button></div>':'<div style="color:#f59e0b;font-size:13px">⚠️ 未配置</div>';
   h+=`<div class="btn-row"><button class="btn btn-dark" onclick="this.closest('.modal-overlay').remove()">取消</button><button class="btn btn-blue" onclick="saveGit()">保存</button></div></div></div>`;
   document.body.insertAdjacentHTML('beforeend',h)
 }
