@@ -69,7 +69,7 @@ input:focus,textarea:focus,select:focus{border-color:#6366f1!important}
 <body>
 <div class="topbar"><span class="logo">今心网络</span><span class="title">管理</span><span id="syncBadge" class="sync-status sync-off">⚪离线</span></div>
 <div class="container" id="app"></div>
-<div class="lightbox" id="lightbox" onclick="hideLightbox()"><span class="close">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
+<div class="lightbox" id="lightbox"><span class="close" id="lbClose">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
 <div class="bottom-bar">
   <button class="btn btn-blue" onclick="showAdd()">＋新增</button>
   <button class="btn btn-green" onclick="if(gitToken)syncNow();else showGitSettings()">同步</button>
@@ -181,8 +181,16 @@ function nowISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMont
 function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&a.re<=Date.now())return'已到期';return a.status}
 function rem(a){let s=rs(a);if(s!=='已出租'||!a.re)return'';let d=a.re-Date.now();if(d<=0)return'已到期';let dd=Math.floor(d/86400000),hh=Math.floor(d%86400000/3600000);return '⏱'+(dd>0?dd+'天':'')+(hh>0?hh+'小时':'')}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
+function showLightbox(src){let i=document.getElementById('lightboxImg');i.style.transform='';i.src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
 function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}
+// Lightbox zoom: pinch, double-tap, scroll
+(function(){let lb=document.getElementById('lightbox'),img=document.getElementById('lightboxImg'),cl=document.getElementById('lbClose'),_lz=1,_ld=0,_lt=0;if(!lb)return;
+lb.addEventListener('click',function(e){if(e.target===lb||e.target===cl)hideLightbox()});
+lb.addEventListener('touchstart',function(e){if(e.touches.length===2){_ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);e.preventDefault()}},{passive:false});
+lb.addEventListener('touchmove',function(e){if(e.touches.length===2&&_ld>0){let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_lz=Math.max(1,Math.min(5,_lz*d/_ld));_ld=d;img.style.transform='scale('+_lz+')';e.preventDefault()}},{passive:false});
+lb.addEventListener('touchend',function(){_ld=0});
+img.addEventListener('click',function(){let t=Date.now();if(t-_lt<300){_lz=_lz>1.5?1:2.5;img.style.transform='scale('+_lz+')';_lt=0}else _lt=t});
+img.addEventListener('wheel',function(e){e.preventDefault();_lz=Math.max(1,Math.min(5,_lz-e.deltaY*0.01));img.style.transform='scale('+_lz+')'},{passive:false})})();
 function renderStats(){let t=0,il=0,rt=0,ex=0;accounts.forEach(a=>{t++;let s=rs(a);if(s==='空闲')il++;if(s==='已出租')rt++;if(s==='已到期')ex++});return '<div class="stats">'+['全部','空闲','已出租','已到期'].map(s=>'<div class="stat'+(filter===s?' active':'')+'" onclick="filter=\''+s+'\';render()">'+s+'<b>'+{全部:t,空闲:il,已出租:rt,已到期:ex}[s]+'</b></div>').join('')+'</div>'}
 function formatPrices(prices){
   if(!prices||!prices.length)return'';

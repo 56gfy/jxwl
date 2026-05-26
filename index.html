@@ -50,7 +50,7 @@ body{background:#0d0d0d;color:#e5e5e5;font-family:-apple-system,BlinkMacSystemFo
 <body>
 <div class="topbar"><div class="logo-row"><span class="logo-badge">今心网络</span><span class="title">账号展示</span></div><div class="sub" id="info">加载中...</div></div>
 <div class="container" id="main"></div>
-<div class="lightbox" id="lightbox" onclick="hideLightbox()"><span class="close">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
+<div class="lightbox" id="lightbox"><span class="close" id="lbClose">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
 <script>
 const GAME_EMOJI={LOL:'🎮',DNF:'⚔️',CF:'🔫',永劫无间:'🗡️',原神:'✨',王者荣耀:'👑',和平精英:'',绝地求生:'',逆战:'💥',魔兽世界:'🐉',梦幻西游:'🐵',传奇:'⚡'};
 const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',吃鸡:'heji.png',和平精英:'heji.png',绝地求生:'heji.png',王者荣耀:'wzry.png',原神:'ys.png',魔兽世界:'mssj.png',逆战:'nz.png',梦幻西游:'mhxy.png',传奇:'cq.png'};
@@ -58,8 +58,16 @@ const SC={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'
 let allAccounts=[],activeFilter='全部';
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function showLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
+function showLightbox(src){let i=document.getElementById('lightboxImg');i.style.transform='';i.src=src;document.getElementById('lightbox').style.display='flex';document.body.style.overflow='hidden'}
 function hideLightbox(){document.getElementById('lightbox').style.display='none';document.body.style.overflow=''}
+// Lightbox zoom: pinch, double-tap, scroll
+(function(){let lb=document.getElementById('lightbox'),img=document.getElementById('lightboxImg'),cl=document.getElementById('lbClose'),_lz=1,_ld=0,_lt=0;if(!lb)return;
+lb.addEventListener('click',function(e){if(e.target===lb||e.target===cl)hideLightbox()});
+lb.addEventListener('touchstart',function(e){if(e.touches.length===2){_ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);e.preventDefault()}},{passive:false});
+lb.addEventListener('touchmove',function(e){if(e.touches.length===2&&_ld>0){let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_lz=Math.max(1,Math.min(5,_lz*d/_ld));_ld=d;img.style.transform='scale('+_lz+')';e.preventDefault()}},{passive:false});
+lb.addEventListener('touchend',function(){_ld=0});
+img.addEventListener('click',function(){let t=Date.now();if(t-_lt<300){_lz=_lz>1.5?1:2.5;img.style.transform='scale('+_lz+')';_lt=0}else _lt=t});
+img.addEventListener('wheel',function(e){e.preventDefault();_lz=Math.max(1,Math.min(5,_lz-e.deltaY*0.01));img.style.transform='scale('+_lz+')'},{passive:false})})();
 function chip(label,count,filter){const cls=activeFilter===filter?'active':'';return '<span class="chip '+cls+'" onclick="setFilter(\''+filter+'\')">'+label+' '+count+'</span>'}
 function setFilter(f){activeFilter=f;render()}
 
