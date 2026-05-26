@@ -52,6 +52,7 @@ body{background:#0d0d0d;color:#e5e5e5;font-family:-apple-system,BlinkMacSystemFo
 <div class="container" id="main"></div>
 <div class="lightbox" id="lightbox"><span class="close" id="lbClose">✕</span><img id="lightboxImg" src="" alt="装备图"></div>
 <script>
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 const GAME_EMOJI={LOL:'🎮',DNF:'⚔️',CF:'🔫',永劫无间:'🗡️',原神:'✨',王者荣耀:'👑',和平精英:'',绝地求生:'',逆战:'💥',魔兽世界:'🐉',梦幻西游:'🐵',传奇:'⚡'};
 const GAME_IMG={LOL:'LOL.png',CF:'CF.png',DNF:'DNF.png',永劫无间:'yjwj.png',吃鸡:'heji.png',和平精英:'heji.png',绝地求生:'heji.png',王者荣耀:'wzry.png',原神:'ys.png',魔兽世界:'mssj.png',逆战:'nz.png',梦幻西游:'mhxy.png',传奇:'cq.png'};
 const SC={空闲:'st-idle',已出租:'st-rented',已到期:'st-expired',停用:'st-disabled'};
