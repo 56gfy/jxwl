@@ -147,7 +147,7 @@ function uploadImage(file){
         if(w>maxW){h=h*maxW/w;w=maxW}
         c.width=w;c.height=h;
         c.getContext('2d').drawImage(img,0,0,w,h);
-        let compressed=c.toDataURL('image/jpeg',0.85);
+        let compressed=c.toDataURL('image/jpeg',0.7);
         let base64=compressed.split(',')[1];
         let name='img_'+Date.now()+'.jpg';
         if(!gitToken){resolve(compressed);return}
