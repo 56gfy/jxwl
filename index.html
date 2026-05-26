@@ -120,7 +120,7 @@ function render(){
 
 async function loadFromGit(){
   try{
-    let r=await fetch('https://cdn.jsdelivr.net/gh/56gfy/jxwl@main/data.json?'+Date.now());
+    let c=new AbortController();setTimeout(()=>c.abort(),5000);let r=await fetch('https://cdn.jsdelivr.net/gh/56gfy/jxwl@main/data.json?'+Date.now(),{signal:c.signal});
     if(!r.ok)return null;
     let data=await r.json();
     return data&&data.accounts?data.accounts:null;

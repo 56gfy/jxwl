@@ -135,47 +135,39 @@ async function syncNow(){
   }
 }
 
-// Upload image to GitHub repo (高清原图), fallback to inline base64
+// Upload image to GitHub repo - compress first for fast loading
 function uploadImage(file){
   return new Promise((resolve)=>{
     let reader=new FileReader();
-    reader.onload=async function(e){
-      let base64=e.target.result.split(',')[1];
-      let ext=file.name.split('.').pop().match(/^(png|jpg|jpeg|gif|webp)$/i)?file.name.split('.').pop():'jpg';
-      let name='img_'+Date.now()+'.'+ext;
-      // Try uploading to GitHub images/ directory
-      try{
-        let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/images/${name}`,{
-          method:'PUT',
-          headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},
-          body:JSON.stringify({message:'upload image',content:base64,branch:GIT_BRANCH})
-        });
-        if(r.ok||r.status===201){
-          resolve(`https://raw.githubusercontent.com/${GIT_USER}/${GIT_REPO}/${GIT_BRANCH}/images/${name}`);
-          return
-        }
-        let d=await r.json().catch(()=>({}));
-        console.error('GitHub image upload fail:',d.message)
-      }catch(e){console.error('GitHub image upload err:',e)}
-      // Fallback: compress and store inline
+    reader.onload=function(e){
       let img=new Image();
-      img.onload=function(){
+      img.onload=async function(){
         let c=document.createElement('canvas'),maxW=800;
         let w=img.width,h=img.height;
         if(w>maxW){h=h*maxW/w;w=maxW}
         c.width=w;c.height=h;
         c.getContext('2d').drawImage(img,0,0,w,h);
-        resolve(c.toDataURL('image/jpeg',0.85));
+        let compressed=c.toDataURL('image/jpeg',0.85);
+        let base64=compressed.split(',')[1];
+        let name='img_'+Date.now()+'.jpg';
+        if(!gitToken){resolve(compressed);return}
+        try{
+          let r=await fetch('https://api.github.com/repos/56gfy/jxwl/contents/images/'+name,{
+            method:'PUT',
+            headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},
+            body:JSON.stringify({message:'upload image',content:base64,branch:GIT_BRANCH})
+          });
+          if(r.ok||r.status===201)resolve('https://raw.githubusercontent.com/56gfy/jxwl/main/images/'+name);
+          else resolve(compressed)
+        }catch(e){resolve(compressed)}
       };
       img.onerror=function(){resolve(e.target.result)};
-      img.src=e.target.result;
+      img.src=e.target.result
     };
     reader.onerror=function(){resolve(null)};
     reader.readAsDataURL(file)
   });
-}
-
-function save(){localStorage.setItem('jx_acc',JSON.stringify(accounts));localStorage.setItem('jx_nid',nextId);localStorage.setItem('jx_hist',JSON.stringify(history.slice(0,200)))}
+}n save(){localStorage.setItem('jx_acc',JSON.stringify(accounts));localStorage.setItem('jx_nid',nextId);localStorage.setItem('jx_hist',JSON.stringify(history.slice(0,200)))}
 function load(){try{let a=localStorage.getItem('jx_acc');if(a){accounts=JSON.parse(a)}}catch(e){}nextId=1;accounts.forEach(x=>{if(x.id>=nextId)nextId=x.id+1});let sn=parseInt(localStorage.getItem('jx_nid')||'0');if(sn>nextId)nextId=sn;try{let h=localStorage.getItem('jx_hist');if(h)history=JSON.parse(h)}catch(e){}}
 function nowISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'T'+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function rs(a){if(a.status==='停用')return'停用';if(a.status==='空闲')return'空闲';if(a.re&&a.re<=Date.now())return'已到期';return a.status}
