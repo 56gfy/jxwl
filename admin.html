@@ -98,21 +98,26 @@ async function writeToGit(data,sha){try{
 async function syncToGit(){if(!gitToken)return;let sha=await getGitSha();updateSyncBadge(false);await writeToGit({accounts,nextId,history:history.slice(0,200)},sha)}
 async function syncFromGit(){if(!gitToken)return;updateSyncBadge(false);let d=await readFromGit();if(d&&d.accounts){accounts=d.accounts;nextId=d.nextId||1;if(d.history)history=d.history;updateSyncBadge(true);render();return true}updateSyncBadge(false);return false}
 
-// Upload image to GitHub
-async function uploadImage(file){
-  if(!gitToken){alert('请先配置 GitHub Token');return null}
-  let ext=file.name.split('.').pop();let name='img_'+Date.now()+'.'+ext;
-  let reader=new FileReader();
-  return new Promise((resolve,reject)=>{
-    reader.onload=async function(e){
-      let base64=e.target.result.split(',')[1];
-      try{
-        let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/images/${name}`,{method:'PUT',headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},body:JSON.stringify({message:'upload image',content:base64,branch:GIT_BRANCH})});
-        if(r.ok||r.status===201){
-          resolve(`https://raw.githubusercontent.com/${GIT_USER}/${GIT_REPO}/${GIT_BRANCH}/images/${name}`);
-        }else{let d=await r.json();alert('上传失败: '+(d.message||'未知错误'));resolve(null)}
-      }catch(e){alert('上传失败: '+e.message);resolve(null)}
-    };reader.readAsDataURL(file)
+// Upload image - convert to compressed base64 stored in data.json
+function uploadImage(file){
+  return new Promise((resolve)=>{
+    let reader=new FileReader();
+    reader.onload=function(e){
+      let url=e.target.result;
+      let img=new Image();
+      img.onload=function(){
+        let c=document.createElement('canvas'),maxW=400;
+        let w=img.width,h=img.height;
+        if(w>maxW){h=h*maxW/w;w=maxW}
+        c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(c.toDataURL('image/jpeg',0.6));
+      };
+      img.onerror=function(){resolve(url)}; // fallback
+      img.src=url;
+    };
+    reader.onerror=function(){resolve(null)};
+    reader.readAsDataURL(file)
   });
 }
 
