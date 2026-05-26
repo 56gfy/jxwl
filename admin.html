@@ -142,12 +142,12 @@ function uploadImage(file){
     reader.onload=function(e){
       let img=new Image();
       img.onload=async function(){
-        let c=document.createElement('canvas'),maxW=800;
+        let c=document.createElement('canvas'),maxW=1600;
         let w=img.width,h=img.height;
         if(w>maxW){h=h*maxW/w;w=maxW}
         c.width=w;c.height=h;
         c.getContext('2d').drawImage(img,0,0,w,h);
-        let compressed=c.toDataURL('image/jpeg',0.7);
+        let compressed=c.toDataURL('image/jpeg',0.92);
         let base64=compressed.split(',')[1];
         let name='img_'+Date.now()+'.jpg';
         if(!gitToken){resolve(compressed);return}
