@@ -96,29 +96,37 @@ function updateSyncBadge(ok,syncing){
   }
   b.textContent=t
 }
-async function getGitSha(){try{let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{headers:{Authorization:'token '+gitToken}});if(!r.ok)return null;return (await r.json()).sha}catch(e){return null}}
-async function readFromGit(){
-  try{
-    let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{headers:{Authorization:'token '+gitToken}});
-    if(!r.ok)return null;
-    let j=await r.json();
-    return JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))
-  }catch(e){return null}
+let _syncing=0; // lock to prevent concurrent syncs
+async function writeToGit(data,sha){
+  for(let i=0;i<3;i++){
+    try{
+      if(!sha||i>0){
+        let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{headers:{Authorization:'token '+gitToken}});
+        if(r.ok)sha=(await r.json()).sha;else continue
+      }
+      let body={message:'sync',content:btoa(unescape(encodeURIComponent(JSON.stringify(data)))),branch:GIT_BRANCH,sha};
+      let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{method:'PUT',headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(r.ok||r.status===201){updateSyncBadge(true);return true}
+      let err=await r.json().catch(()=>({}));
+      console.error('sync write error['+i+']:',r.status,err.message);
+      if(err.message&&err.message.includes('sha')){sha=null;continue}
+      return false
+    }catch(e){console.error('sync write exception:',e);return false}
+  }
+  return false
 }
-async function writeToGit(data,sha){try{
-  let body={message:'sync',content:btoa(unescape(encodeURIComponent(JSON.stringify(data)))),branch:GIT_BRANCH};
-  if(sha)body.sha=sha;
-  let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{method:'PUT',headers:{Authorization:'token '+gitToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  let ok=r.ok||r.status===201;updateSyncBadge(ok);return ok
-}catch(e){updateSyncBadge(false);return false}}
-async function syncToGit(){if(!gitToken)return false;let sha=await getGitSha();updateSyncBadge(false);return await writeToGit({accounts,nextId,history:history.slice(0,200)},sha)}
-async function syncFromGit(){if(!gitToken)return false;updateSyncBadge(false);let d=await readFromGit();if(d&&d.accounts){accounts=d.accounts;nextId=d.nextId||1;if(d.history)history=d.history;updateSyncBadge(true);render();return true}updateSyncBadge(false);return false}
+async function syncToGit(){if(_syncing)return false;_syncing=1;try{if(!gitToken)return false;updateSyncBadge(false);let r=await writeToGit({accounts,nextId,history:history.slice(0,200)});return r}finally{_syncing=0}}
+async function syncFromGit(){if(_syncing)return false;_syncing=1;try{if(!gitToken)return false;updateSyncBadge(false);let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}/contents/${GIT_FILE}`,{headers:{Authorization:'token '+gitToken}});if(!r.ok)return false;let j=await r.json();let d=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));if(d&&d.accounts){accounts=d.accounts;nextId=d.nextId||1;if(d.history)history=d.history;updateSyncBadge(true);render();return true}return false}catch(e){console.error('sync read error:',e);return false}finally{_syncing=0}}
 async function syncNow(){
   if(!gitToken){alert('请先配置 Token');return}
   updateSyncBadge(false,true);
   let ok=await syncToGit();
   if(ok)ok=await syncFromGit();
-  if(ok)updateSyncBadge(true);else alert('同步失败！请检查 Token 和网络')
+  if(ok)updateSyncBadge(true);
+  else{
+    let r=await fetch(`https://api.github.com/repos/${GIT_USER}/${GIT_REPO}`,{headers:{Authorization:'token '+gitToken}}).then(x=>x.ok).catch(()=>false);
+    alert(r?'同步失败！数据冲突或文件被占用，请过几秒重试':'连接 GitHub 失败！请检查网络')
+  }
 }
 
 // Upload image - convert to compressed base64 stored in data.json
