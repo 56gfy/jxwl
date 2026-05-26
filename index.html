@@ -101,7 +101,7 @@ function formatPrices(prices){
 function renderCard(a){
   const g=a.game||'',imgFile=GAME_IMG[g],emoji=GAME_EMOJI[g]||'🎮';
   let imgHtml='';
-  if(a.equip)imgHtml='<img src="'+esc(a.equip)+'" onclick="showLightbox(this.src)" style="cursor:zoom-in" onerror="this.style.display=\'none\'">';
+  if(a.equip){var u=esc(a.equip);if(u.indexOf('raw.githubusercontent')>0)u='https://cdn.jsdelivr.net/gh/56gfy/jxwl@main/images/'+esc(a.equip).split('/').pop();imgHtml='<img src="'+u+'" onclick="showLightbox(this.src)" style="cursor:zoom-in" onerror="this.style.display=\'none\'">';
   else if(imgFile)imgHtml='<img src="'+imgFile+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><span class="emoji-fallback" style="display:none">'+emoji+'</span>';
   else imgHtml='<span class="emoji-fallback">'+emoji+'</span>';
   const s=getStatus(a),pricesHtml=formatPrices(a.prices),remain=getRemain(a);
@@ -120,7 +120,7 @@ function render(){
 
 async function loadFromGit(){
   try{
-    let r=await fetch('https://raw.githubusercontent.com/56gfy/jxwl/main/data.json?'+Date.now());
+    let r=await fetch('https://cdn.jsdelivr.net/gh/56gfy/jxwl@main/data.json?'+Date.now());
     if(!r.ok)return null;
     let data=await r.json();
     return data&&data.accounts?data.accounts:null;
